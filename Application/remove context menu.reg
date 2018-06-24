@@ -1,0 +1,7 @@
+Windows Registry Editor Version 5.00
+
+
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vhd]
+[-HKEY_CLASSES_ROOT\vhd_auto_file]
+[-HKEY_CLASSES_ROOT\.vhd]

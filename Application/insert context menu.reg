@@ -1,0 +1,85 @@
+Windows Registry Editor Version 5.00
+
+
+
+[-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vhd]
+[-HKEY_CLASSES_ROOT\vhd_auto_file]
+[-HKEY_CLASSES_ROOT\.vhd]
+
+
+
+
+
+
+
+
+
+
+[HKEY_CLASSES_ROOT\.vhd\DefaultIcon]
+@="C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe"
+
+[HKEY_CLASSES_ROOT\.vhd\shell\Virtual Disk Manager]
+"MUIVerb"="Virtual Disk Manager"
+"Position"="Bottom"
+"Icon"="C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe"
+"ExtendedSubCommandsKey"=".vhd\\Virtual Disk Manager\\Option"
+
+[HKEY_CLASSES_ROOT\.vhd\shell\Virtual Disk Manager\command]
+@="\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"%1\""
+
+
+
+
+
+
+
+
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Attach]
+"MUIVerb"="Attach"
+"Icon"="C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,1"
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Attach\command]
+@="\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-attach\" \"%1\""
+
+
+
+
+
+
+
+
+
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Detach]
+"MUIVerb"="Detach"
+"Icon"="C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,2"
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Detach\command]
+@="\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-detach\" \"%1\""
+
+
+
+
+
+
+
+
+
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Toggle]
+"MUIVerb"="Toggle"
+"Icon"="C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,3"
+"CommandFlags"=dword:00000020
+
+[HKEY_CLASSES_ROOT\.vhd\Virtual Disk Manager\Option\shell\Toggle\command]
+@="\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-toggle\" \"%1\""
+
+
+
+
+
+
+
+
+

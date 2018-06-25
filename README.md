@@ -1,7 +1,6 @@
 ## Virtual Disk Manager
 <sup>.NET Framework 3.5</sup>  
-<sup>• **Windows 8 / 10** is not supported :(</sup>  
-<sup>• **Read-Only** Flag is not supported :(</sup>
+<sup>• **Windows 7 / 8 / 10**</sup>
 
 ### Application
 

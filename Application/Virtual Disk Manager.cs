@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -19,7 +20,7 @@ namespace VirtualDiskManager
     class VHD
     {
         [DllImport("virtdisk.dll", CharSet = CharSet.Unicode)]
-        public static extern Int32 OpenVirtualDisk(ref STORAGE_TYPE Type, String Path, ACCESS_MASK Mask, OPEN_FLAG Flag, ref OPEN_PARAMETERS Parameters, ref IntPtr Handle);
+        public static extern Int32 OpenVirtualDisk(ref STORAGE_TYPE Type, String File, ACCESS_MASK Mask, OPEN_FLAG Flag, ref OPEN_PARAMETERS Parameters, ref IntPtr Handle);
 
 
 
@@ -49,6 +50,12 @@ namespace VirtualDiskManager
 
 
 
+        public static Int32 OS = Int32.Parse(
+                    Environment.OSVersion.Version.Major.ToString() +
+                    Environment.OSVersion.Version.Minor.ToString());
+
+
+
 
 
 
@@ -75,68 +82,12 @@ namespace VirtualDiskManager
 
             try
             {
-                RegistryRemove();
+                removeRegistry();
+                
+                addRegistry(".vhd");
+                if (OS > 61) addRegistry(".vhdx");
 
-                /*
-                    Add Registry
-                */
-
-                RegistryKey VHD = Registry.ClassesRoot.CreateSubKey(".vhd");
-
-                RegistryKey DefaultIcon = VHD.CreateSubKey("DefaultIcon");
-                DefaultIcon.SetValue(null, "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe");
-
-                RegistryKey shell = VHD.CreateSubKey("shell\\Virtual Disk Manager");
-                shell.SetValue("MUIVerb", "Virtual Disk Manager");
-                shell.SetValue("Position", "Bottom");
-                shell.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe");
-                shell.SetValue("ExtendedSubCommandsKey", ".vhd\\Virtual Disk Manager\\Option");
-
-                RegistryKey command = shell.CreateSubKey("command");
-                command.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"%1\"");
-
-                /*
-                    Options
-                        Attach
-                        Detach
-                        Toggle
-                */
-
-                RegistryKey option = VHD.CreateSubKey("Virtual Disk Manager\\Option\\shell");
-
-                    // Attach
-
-                RegistryKey attach = option.CreateSubKey("Attach");
-                attach.SetValue("MUIVerb", "Attach");
-                attach.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,1");
-
-                RegistryKey commandAttach = attach.CreateSubKey("command");
-                commandAttach.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-attach\" \"%1\"");
-
-                    // Detach
-
-                RegistryKey detach = option.CreateSubKey("Detach");
-                detach.SetValue("MUIVerb", "Detach");
-                detach.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,2");
-
-                RegistryKey commandDetach = detach.CreateSubKey("command");
-                commandDetach.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-detach\" \"%1\"");
-
-                    // Toggle
-
-                RegistryKey toggle = option.CreateSubKey("Toggle");
-                toggle.SetValue("MUIVerb", "Toggle");
-                toggle.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,3");
-                toggle.SetValue("CommandFlags", "32", RegistryValueKind.DWord);
-
-                RegistryKey commandToggle = toggle.CreateSubKey("command");
-                commandToggle.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-toggle\" \"%1\"");
-
-                /*
-                    Copy to Programm Files
-                */
-
-                string Application = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string Application = Assembly.GetExecutingAssembly().Location;
                 Directory.CreateDirectory(ProgrammFiles);
                 File.Copy(Application, ProgrammFiles + "\\Virtual Disk Manager.exe", true);
 
@@ -181,7 +132,7 @@ namespace VirtualDiskManager
 
             try
             {
-                RegistryRemove();
+                removeRegistry();
 
                 Directory.Delete(ProgrammFiles, true);
 
@@ -207,17 +158,88 @@ namespace VirtualDiskManager
 
 
 
-        static void RegistryRemove()
+        static void removeRegistry()
         {
-
-            if (Registry.ClassesRoot.OpenSubKey(".vhd") != null)
+            if (Registry.ClassesRoot.OpenSubKey(".vhd", true) != null)
                 Registry.ClassesRoot.DeleteSubKeyTree(".vhd");
 
-            if (Registry.ClassesRoot.OpenSubKey("vhd_auto_file") != null)
+            if (Registry.ClassesRoot.OpenSubKey(".vhdx", true) != null)
+                Registry.ClassesRoot.DeleteSubKeyTree(".vhdx");
+
+            if (Registry.ClassesRoot.OpenSubKey("vhd_auto_file", true) != null)
                 Registry.ClassesRoot.DeleteSubKeyTree("vhd_auto_file");
 
-            if (Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vhd") != null)
+            if (Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vhd", true) != null)
                 Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vhd");
+        }
+
+
+
+
+
+
+
+
+
+
+        static void addRegistry(String extension)
+        {
+            RegistryKey VHD = Registry.ClassesRoot.CreateSubKey(extension);
+
+            RegistryKey DefaultIcon = VHD.CreateSubKey("DefaultIcon");
+            DefaultIcon.SetValue(null, "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe");
+
+            RegistryKey shell = VHD.CreateSubKey("shell\\Virtual Disk Manager");
+            shell.SetValue("MUIVerb", "Virtual Disk Manager");
+            shell.SetValue("Position", "Bottom");
+            shell.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe");
+            shell.SetValue("ExtendedSubCommandsKey", extension + "\\Virtual Disk Manager\\Option");
+
+            RegistryKey command = shell.CreateSubKey("command");
+            command.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"%1\"");
+
+
+            
+            RegistryKey option = VHD.CreateSubKey("Virtual Disk Manager\\Option\\shell");
+
+            // Attach
+
+            RegistryKey attach = option.CreateSubKey("Attach");
+            attach.SetValue("MUIVerb", "Attach");
+            attach.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,1");
+
+            RegistryKey commandAttach = attach.CreateSubKey("command");
+            commandAttach.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-attach\" \"%1\"");
+
+            // Detach
+
+            RegistryKey detach = option.CreateSubKey("Detach");
+            detach.SetValue("MUIVerb", "Detach");
+            detach.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,2");
+            detach.SetValue("CommandFlags", "32", RegistryValueKind.DWord);
+
+            RegistryKey commandDetach = detach.CreateSubKey("command");
+            commandDetach.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-detach\" \"%1\"");
+
+            // Toggle
+
+            RegistryKey toggle = option.CreateSubKey("Toggle");
+            toggle.SetValue("MUIVerb", "Toggle");
+            toggle.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,3");
+            toggle.SetValue("CommandFlags", "32", RegistryValueKind.DWord);
+
+            RegistryKey commandToggle = toggle.CreateSubKey("command");
+            commandToggle.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-toggle\" \"%1\"");
+
+            // Attach as Read-Only
+
+            RegistryKey attach_r = option.CreateSubKey("Attach_R");
+            attach_r.SetValue("MUIVerb", "Attach -Read Only");
+            attach_r.SetValue("Icon", "C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe,1");
+            // attach_r.SetValue("CommandFlags", "64", RegistryValueKind.DWord);
+
+            RegistryKey commandAttach_r = attach_r.CreateSubKey("command");
+            commandAttach_r.SetValue(null, "\"C:\\Program Files\\Virtual Disk Manager\\Virtual Disk Manager.exe\" \"-attach-r\" \"%1\"");
         }
 
 
@@ -236,15 +258,19 @@ namespace VirtualDiskManager
             {
                 AllocConsole();
                 Console.BackgroundColor = ConsoleColor.White;
-                Console.Title = "Virtual Disk Manager";
-                Console.SetBufferSize(80, 20);
+                Console.Clear();
+                Console.Title = "Virtual Disk Manager v" +
+                    Assembly.GetExecutingAssembly().GetName().Version.Major + "." +
+                    Assembly.GetExecutingAssembly().GetName().Version.Minor;
+                // Console.SetBufferSize(80, 20);
 
                 Console.WriteLine("\n");
                 Console.WriteLine("     Available commands:\n");
                 Console.ForegroundColor = ConsoleColor.DarkGray;
-                Console.WriteLine("         -attach [path]");
-                Console.WriteLine("         -detach [path]");
-                Console.WriteLine("         -toggle [path]");
+                Console.WriteLine("         -attach-r   [path]  as Read-Only");
+                Console.WriteLine("         -attach     [path]");
+                Console.WriteLine("         -detach     [path]");
+                Console.WriteLine("         -toggle     [path]");
                 Console.WriteLine("\n");
 
                 string ProgrammFiles = Environment.ExpandEnvironmentVariables(@"%SystemDrive%\Program Files\Virtual Disk Manager");
@@ -273,7 +299,15 @@ namespace VirtualDiskManager
 
                 if (cmd == "-attach")
                 {
-                    Attach(path);
+                    Attach(path, false);
+                    return;
+                }
+
+
+
+                if (cmd == "-attach-r")
+                {
+                    Attach(path, true);
                     return;
                 }
 
@@ -310,7 +344,7 @@ namespace VirtualDiskManager
 
 
 
-        public static IntPtr Open(String Path)
+        static IntPtr Open(String File)
         {
 
             IntPtr Handle = IntPtr.Zero;
@@ -323,14 +357,19 @@ namespace VirtualDiskManager
                 */
 
                 var StorageType = new STORAGE_TYPE();
-                StorageType.DeviceID = 2;
+
+                StorageType.DeviceID =
+                    Path.GetExtension(File) == ".iso" ? 1 :
+                    Path.GetExtension(File) == ".vhd" ? 2 :
+                    Path.GetExtension(File) == ".vhdx" ? 3 : 0;
+
                 StorageType.VendorID = new Guid("EC984AEC-A0F9-47e9-901F-71415A66345B");
 
                 var Parameters = new OPEN_PARAMETERS();
                 Parameters.Version = DISK_VERSION.VERSION_1;
                 Parameters.Version1.RWDepth = 1;
 
-                int Result = OpenVirtualDisk(ref StorageType, Path, ACCESS_MASK.ACCESS_ALL, OPEN_FLAG.NONE, ref Parameters, ref Handle);
+                int Result = OpenVirtualDisk(ref StorageType, File, ACCESS_MASK.ACCESS_ALL, OPEN_FLAG.NONE, ref Parameters, ref Handle);
                 if (Result != 0)
                 {
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Error {0}.", Result));
@@ -354,19 +393,22 @@ namespace VirtualDiskManager
 
 
 
-        public static void Attach(String Path)
+        public static void Attach(String File, bool RO)
         {
-            IntPtr Handle = Open(Path);
-            AttachDisk(Handle);
+            IntPtr Handle = Open(File);
+            AttachDisk(Handle, RO);
         }
 
-        public static void AttachDisk(IntPtr Handle)
+        public static void AttachDisk(IntPtr Handle, bool RO)
         {
             try
             {
                 var Parameters = new ATTACH_PARAMETERS();
                 Parameters.Version = ATTACH_VERSION.VERSION_1;
-                int Result = AttachVirtualDisk(Handle, IntPtr.Zero, ATTACH_FLAG.PERMANENT_LIFETIME, 0, ref Parameters, IntPtr.Zero);
+
+                var Flag = RO ? ATTACH_FLAG.PERMANENT_LIFETIME | ATTACH_FLAG.READ_ONLY : ATTACH_FLAG.PERMANENT_LIFETIME;
+
+                int Result = AttachVirtualDisk(Handle, IntPtr.Zero, Flag, 0, ref Parameters, IntPtr.Zero);
                 if (Result != 0)
                 {
                     throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Error {0}.", Result));
@@ -390,9 +432,9 @@ namespace VirtualDiskManager
 
 
 
-        public static void Detach(String Path)
+        public static void Detach(String File)
         {
-            IntPtr Handle = Open(Path);
+            IntPtr Handle = Open(File);
             DetachDisk(Handle);
         }
 
@@ -424,9 +466,9 @@ namespace VirtualDiskManager
 
 
 
-        public static void Toggle(String Path)
+        public static void Toggle(String File)
         {
-            IntPtr Handle = Open(Path);
+            IntPtr Handle = Open(File);
 
             try
             {
@@ -450,7 +492,7 @@ namespace VirtualDiskManager
 
                 else if (Result == 55) // is not available
                 {
-                    AttachDisk(Handle);
+                    AttachDisk(Handle, false);
                 }
 
                 else {
@@ -488,7 +530,6 @@ namespace VirtualDiskManager
 
     public enum ACCESS_MASK
     {
-        ATTACH_RO = 0x00010000,
         ACCESS_ALL = 0x003f0000
     }
 
